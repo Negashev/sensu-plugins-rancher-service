@@ -103,7 +103,8 @@ class CheckRancherService < Sensu::Plugin::Check::CLI
       end
 
       # get containers
-      service['containers'].each do |container|
+      begin
+        service['containers'].each do |container|
         check_name = "rancher-container-#{container['name']}-state"
         msg = "Instance #{container['name']}"
 
@@ -143,14 +144,16 @@ class CheckRancherService < Sensu::Plugin::Check::CLI
             end
           end
         end
-      end
+        end
 
-      # check service scale size to determine whether it's degraded or not
-      check_name = "rancher-service-state"
-      if service['containers'].size < service['scale']
-        send_warning(check_name, source, "Service is in a degraded state - Current: #{service['containers'].size} (Scale: #{service['scale']})")
-      else
-        send_ok(check_name, source, "Service is healthy")
+        # check service scale size to determine whether it's degraded or not
+        check_name = "rancher-service-state"
+        if service['containers'].size < service['scale']
+          send_warning(check_name, source, "Service is in a degraded state - Current: #{service['containers'].size} (Scale: #{service['scale']})")
+        else
+          send_ok(check_name, source, "Service is healthy")
+        end
+      rescue Exception=>e
       end
     end
 
